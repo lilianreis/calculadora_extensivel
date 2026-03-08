@@ -1,0 +1,90 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:first_app_ueg_20261/src/calculator/domain/operation.dart';
+import 'package:first_app_ueg_20261/src/calculator/domain/operations/bhaskara_operation.dart';
+import 'package:first_app_ueg_20261/src/calculator/logic/calculator_engine.dart';
+
+class MockAdd extends Operation {
+  @override
+  String get symbol => '+';
+  @override
+  String get name => 'Add';
+  @override
+  int get argCount => 1;
+  @override
+  double execute(double acc, [double? op]) => acc + (op ?? 0);
+}
+
+void main() {
+  group('CalculatorEngine Tests', () {
+    late CalculatorEngine engine;
+
+    setUp(() {
+      engine = CalculatorEngine();
+    });
+
+    test('Initial state is 0', () {
+      expect(engine.state.display, '0');
+    });
+
+    test('Add digits updates display', () {
+      engine.addDigit(1);
+      engine.addDigit(2);
+      expect(engine.state.display, '12');
+    });
+
+    test('Basic addition logic', () {
+      engine.addDigit(5);
+      engine.onOperationPressed(MockAdd());
+      engine.addDigit(3);
+      engine.onEqualsPressed();
+      expect(engine.state.display, '8');
+    });
+
+    test('Clear resets state', () {
+      engine.addDigit(5);
+      engine.onClearPressed();
+      expect(engine.state.display, '0');
+    });
+
+    test('Bhaskara operation sequence inputs A, B, C', () {
+      final bhaskara = const BhaskaraOperation();
+
+      // Input A = 1
+      engine.addDigit(1);
+      engine.onOperationPressed(bhaskara);
+      expect(engine.state.bhaskaraA, 1.0);
+      expect(engine.state.bhaskaraB, isNull);
+
+      // Input B = -3
+      // We simulate negative by 'subtract' logic, but for simplicity let's assume we can add negative if we supported the +/- button.
+      // Since there's no +/- here easily mocked, we'll assume we can pass a value or just test positive roots.
+      // Wait, let's just use positive digits for test, e.g. a=1, b=5, c=6 -> roots are -2, -3! Wait, sqrt(25 - 24) = 1. roots are (-5 +- 1)/2 = -2, -3.
+      // Let's type 5 for B.
+      engine.addDigit(5);
+      engine.onOperationPressed(bhaskara);
+      expect(engine.state.bhaskaraB, 5.0);
+
+      // Input C = 6
+      engine.addDigit(6);
+      engine.onEqualsPressed();
+
+      // roots for 1, 5, 6 are -2 and -3. Format could be "-2.0, -3.0"
+      // or we can test if the state output contains them.
+      expect(engine.state.display, contains('-2'));
+      expect(engine.state.bhaskaraA, isNull); // Reset after equals
+    });
+
+    test('Bhaskara operation handles negative determinant with error', () {
+      final bhaskara = const BhaskaraOperation();
+      engine.addDigit(1);
+      engine.onOperationPressed(bhaskara);
+      engine.addDigit(1);
+      engine.onOperationPressed(bhaskara);
+      engine.addDigit(1);
+      engine.onEqualsPressed();
+
+      expect(engine.state.display, 'Error');
+      expect(engine.state.isBhaskaraMode, isFalse);
+    });
+  });
+}

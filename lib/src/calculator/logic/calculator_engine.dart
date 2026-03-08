@@ -1,0 +1,147 @@
+import 'package:flutter/foundation.dart';
+import '../domain/operation.dart';
+import '../domain/operations/bhaskara_operation.dart';
+import 'calculator_state.dart';
+
+class CalculatorEngine extends ChangeNotifier {
+  CalculatorState _state = CalculatorState.initial();
+
+  CalculatorState get state => _state;
+
+  void addDigit(int digit) {
+    String newDisplay;
+    if (_state.isNewNumber || _state.display == '0') {
+      newDisplay = digit.toString();
+    } else {
+      newDisplay = _state.display + digit.toString();
+    }
+
+    _state = _state.copyWith(display: newDisplay, isNewNumber: false);
+    notifyListeners();
+  }
+
+  void onOperationPressed(Operation operation) {
+    if (operation is BhaskaraOperation) {
+      _handleBhaskaraSequencing(operation);
+      return;
+    }
+
+    // Existing operations reset Bhaskara mode if active
+    if (_state.isBhaskaraMode) {
+      _cancelBhaskaraMode();
+    }
+
+    if (operation.argCount == 0) {
+      // Unary operation like sqrt or square
+      final current = double.tryParse(_state.display) ?? 0;
+      final result = operation.execute(current);
+      _state = _state.copyWith(
+        display: _formatResult(result),
+        isNewNumber: true,
+      );
+    } else {
+      // Binary operation
+      if (_state.pendingOperation != null && !_state.isNewNumber) {
+        _calculate();
+      }
+
+      _state = _state.copyWith(
+        accumulator: double.tryParse(_state.display),
+        pendingOperation: operation,
+        isNewNumber: true,
+      );
+    }
+    notifyListeners();
+  }
+
+  void onEqualsPressed() {
+    _calculate();
+    _state = _state.copyWith(
+      clearOperation: true,
+      clearAccumulator: true,
+      clearBhaskara: true,
+      isNewNumber: true,
+    );
+    notifyListeners();
+  }
+
+  void onClearPressed() {
+    _state = CalculatorState.initial();
+    notifyListeners();
+  }
+
+  void _handleBhaskaraSequencing(BhaskaraOperation operation) {
+    if (!_state.isBhaskaraMode) {
+      // Start Bhaskara Mode: capture A
+      final current = double.tryParse(_state.display) ?? 0;
+      _state = _state.copyWith(
+        bhaskaraA: current,
+        pendingOperation: operation,
+        isNewNumber: true,
+      );
+    } else if (_state.bhaskaraA != null && _state.bhaskaraB == null) {
+      // Capture B
+      final current = double.tryParse(_state.display) ?? 0;
+      _state = _state.copyWith(bhaskaraB: current, isNewNumber: true);
+    } else if (_state.bhaskaraA != null && _state.bhaskaraB != null) {
+      // Capture C and calculate
+      _calculate();
+    }
+    notifyListeners();
+  }
+
+  void _cancelBhaskaraMode() {
+    _state = _state.copyWith(clearOperation: true, clearBhaskara: true);
+  }
+
+  void _calculate() {
+    if (_state.pendingOperation == null) return;
+
+    if (_state.isBhaskaraMode) {
+      if (_state.bhaskaraA == null || _state.bhaskaraB == null) return;
+      final a = _state.bhaskaraA!;
+      final b = _state.bhaskaraB!;
+      final c = double.tryParse(_state.display) ?? 0;
+      try {
+        final bhaskara = _state.pendingOperation as BhaskaraOperation;
+        final roots = bhaskara.calculate(a, b, c);
+        _state = _state.copyWith(
+          display:
+              'x1=${_formatResult(roots[0])}, x2=${_formatResult(roots[1])}',
+          clearBhaskara: true,
+          clearOperation: true,
+          isNewNumber: true,
+        );
+      } catch (e) {
+        _state = _state.copyWith(
+          display: 'Error',
+          clearBhaskara: true,
+          clearOperation: true,
+          isNewNumber: true,
+        );
+      }
+      return;
+    }
+
+    if (_state.accumulator == null) return;
+
+    final current = double.tryParse(_state.display) ?? 0;
+    try {
+      final result = _state.pendingOperation!.execute(
+        _state.accumulator!,
+        current,
+      );
+      _state = _state.copyWith(display: _formatResult(result));
+    } catch (e) {
+      _state = _state.copyWith(display: 'Error');
+    }
+  }
+
+  String _formatResult(double result) {
+    if (result.isInfinite || result.isNaN) return 'Error';
+    if (result == result.toInt()) {
+      return result.toInt().toString();
+    }
+    return result.toString();
+  }
+}
