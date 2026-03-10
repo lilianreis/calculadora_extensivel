@@ -89,6 +89,15 @@ class CalculatorGrid extends StatelessWidget {
                   onPressed: () => engine.toggleSign(),
                 ),
               ),
+              SizedBox(
+                width: 45,
+                height: 35,
+                child: OperationButton(
+                  text: ',',
+                  color: Colors.grey[300],
+                  onPressed: engine.addComma,
+                ),
+              ),
             ],
           ),
         ),

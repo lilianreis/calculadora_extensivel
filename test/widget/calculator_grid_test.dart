@@ -35,5 +35,9 @@ void main() {
     await tester.tap(find.text('+/-'));
     await tester.pump();
     expect(engine.state.display, '5');
+
+    await tester.tap(find.text(','));
+    await tester.pump();
+    expect(engine.state.display, '5,');
   });
 }

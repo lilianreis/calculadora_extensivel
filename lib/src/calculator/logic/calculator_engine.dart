@@ -24,6 +24,31 @@ class CalculatorEngine extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addComma() {
+    if (_state.display == 'Error') return;
+
+    if (_state.isNewNumber ||
+        _state.display.isEmpty ||
+        _state.display == '0' ||
+        _state.display == '-0') {
+      String newDisplay = _state.pendingNegative ? '-0,' : '0,';
+      _state = _state.copyWith(
+        display: newDisplay,
+        isNewNumber: false,
+        pendingNegative: false,
+      );
+      notifyListeners();
+      return;
+    }
+
+    if (_state.display.contains(',')) {
+      return;
+    }
+
+    _state = _state.copyWith(display: _state.display + ',', isNewNumber: false);
+    notifyListeners();
+  }
+
   void onOperationPressed(Operation operation) {
     if (operation is BhaskaraOperation) {
       _handleBhaskaraSequencing(operation);
@@ -37,7 +62,7 @@ class CalculatorEngine extends ChangeNotifier {
 
     if (operation.argCount == 0) {
       // Unary operation like sqrt or square
-      final current = double.tryParse(_state.display) ?? 0;
+      final current = _parseDouble(_state.display);
       final result = operation.execute(current);
       _state = _state.copyWith(
         display: _formatResult(result),
@@ -58,7 +83,7 @@ class CalculatorEngine extends ChangeNotifier {
       }
 
       _state = _state.copyWith(
-        accumulator: double.tryParse(_state.display),
+        accumulator: _parseDouble(_state.display),
         pendingOperation: operation,
         isNewNumber: true,
         pendingNegative: false,
@@ -107,7 +132,7 @@ class CalculatorEngine extends ChangeNotifier {
   void _handleBhaskaraSequencing(BhaskaraOperation operation) {
     if (!_state.isBhaskaraMode) {
       // Start Bhaskara Mode: capture A
-      final current = double.tryParse(_state.display) ?? 0;
+      final current = _parseDouble(_state.display);
       _state = _state.copyWith(
         bhaskaraA: current,
         pendingOperation: operation,
@@ -115,7 +140,7 @@ class CalculatorEngine extends ChangeNotifier {
       );
     } else if (_state.bhaskaraA != null && _state.bhaskaraB == null) {
       // Capture B
-      final current = double.tryParse(_state.display) ?? 0;
+      final current = _parseDouble(_state.display);
       _state = _state.copyWith(bhaskaraB: current, isNewNumber: true);
     } else if (_state.bhaskaraA != null && _state.bhaskaraB != null) {
       // Capture C and calculate
@@ -135,7 +160,7 @@ class CalculatorEngine extends ChangeNotifier {
       if (_state.bhaskaraA == null || _state.bhaskaraB == null) return;
       final a = _state.bhaskaraA!;
       final b = _state.bhaskaraB!;
-      final c = double.tryParse(_state.display) ?? 0;
+      final c = _parseDouble(_state.display);
       try {
         final bhaskara = _state.pendingOperation as BhaskaraOperation;
         final roots = bhaskara.calculate(a, b, c);
@@ -159,7 +184,7 @@ class CalculatorEngine extends ChangeNotifier {
 
     if (_state.accumulator == null) return;
 
-    final current = double.tryParse(_state.display) ?? 0;
+    final current = _parseDouble(_state.display);
     try {
       final result = _state.pendingOperation!.execute(
         _state.accumulator!,
@@ -176,6 +201,10 @@ class CalculatorEngine extends ChangeNotifier {
     if (result == result.toInt()) {
       return result.toInt().toString();
     }
-    return result.toString();
+    return result.toString().replaceAll('.', ',');
+  }
+
+  double _parseDouble(String value) {
+    return double.tryParse(value.replaceAll(',', '.')) ?? 0;
   }
 }

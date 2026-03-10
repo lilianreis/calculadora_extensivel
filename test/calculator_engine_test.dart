@@ -166,5 +166,53 @@ void main() {
       expect(engine.state.display, 'Error');
       expect(engine.state.isBhaskaraMode, isFalse);
     });
+
+    test('Decimal input handles commas correctly', () {
+      engine.addDigit(1);
+      engine.addComma();
+      engine.addDigit(5);
+      expect(engine.state.display, '1,5');
+
+      engine.addComma(); // Should ignore second comma
+      expect(engine.state.display, '1,5');
+    });
+
+    test('Decimal input starts with 0, when no digit is entered', () {
+      engine.addComma();
+      expect(engine.state.display, '0,');
+    });
+
+    test('Decimal input starts with -0, when pending negative', () {
+      engine.onOperationPressed(MockSubtract());
+      engine.addComma();
+      expect(engine.state.display, '-0,');
+      engine.addDigit(5);
+      expect(engine.state.display, '-0,5');
+    });
+
+    test('Calculation with decimal numbers', () {
+      engine.addDigit(1);
+      engine.addComma();
+      engine.addDigit(5);
+      engine.onOperationPressed(MockAdd());
+      engine.addDigit(2);
+      engine.addComma();
+      engine.addDigit(5);
+      engine.onEqualsPressed();
+      expect(engine.state.display, '4');
+    });
+
+    test('Calculation resulting in decimal formats with comma', () {
+      // 5,5 - 2,1 = 3,4
+      engine.addDigit(5);
+      engine.addComma();
+      engine.addDigit(5);
+      engine.onOperationPressed(MockSubtract());
+      engine.addDigit(2);
+      engine.addComma();
+      engine.addDigit(1);
+      engine.onEqualsPressed();
+      expect(engine.state.display, '3,4');
+    });
   });
 }
