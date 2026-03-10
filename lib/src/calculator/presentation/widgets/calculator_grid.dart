@@ -61,15 +61,15 @@ class CalculatorGrid extends StatelessWidget {
           ],
         ),
 
-        if (extraOps.isNotEmpty) ...[
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Wrap(
-              spacing: 4,
-              runSpacing: 4,
-              alignment: WrapAlignment.center,
-              children: extraOps.map((op) {
+        const Divider(height: 1),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            alignment: WrapAlignment.center,
+            children: [
+              ...extraOps.map((op) {
                 return SizedBox(
                   width: 45,
                   height: 35,
@@ -79,10 +79,19 @@ class CalculatorGrid extends StatelessWidget {
                     onPressed: () => engine.onOperationPressed(op),
                   ),
                 );
-              }).toList(),
-            ),
+              }),
+              SizedBox(
+                width: 45,
+                height: 35,
+                child: OperationButton(
+                  text: '+/-',
+                  color: Colors.grey[300],
+                  onPressed: () => engine.toggleSign(),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ],
     );
   }

@@ -11,12 +11,16 @@ class CalculatorEngine extends ChangeNotifier {
   void addDigit(int digit) {
     String newDisplay;
     if (_state.isNewNumber || _state.display == '0') {
-      newDisplay = digit.toString();
+      newDisplay = _state.pendingNegative ? '-$digit' : digit.toString();
     } else {
       newDisplay = _state.display + digit.toString();
     }
 
-    _state = _state.copyWith(display: newDisplay, isNewNumber: false);
+    _state = _state.copyWith(
+      display: newDisplay,
+      isNewNumber: false,
+      pendingNegative: false,
+    );
     notifyListeners();
   }
 
@@ -41,6 +45,14 @@ class CalculatorEngine extends ChangeNotifier {
       );
     } else {
       // Binary operation
+      if (operation.symbol == '-' &&
+          _state.isNewNumber &&
+          (_state.pendingOperation != null || _state.display == '0')) {
+        _state = _state.copyWith(pendingNegative: true);
+        notifyListeners();
+        return;
+      }
+
       if (_state.pendingOperation != null && !_state.isNewNumber) {
         _calculate();
       }
@@ -49,6 +61,7 @@ class CalculatorEngine extends ChangeNotifier {
         accumulator: double.tryParse(_state.display),
         pendingOperation: operation,
         isNewNumber: true,
+        pendingNegative: false,
       );
     }
     notifyListeners();
@@ -67,6 +80,27 @@ class CalculatorEngine extends ChangeNotifier {
 
   void onClearPressed() {
     _state = CalculatorState.initial();
+    notifyListeners();
+  }
+
+  void toggleSign() {
+    if (_state.display == 'Error' || _state.display.isEmpty) return;
+
+    if (_state.display == '0') {
+      _state = _state.copyWith(pendingNegative: !_state.pendingNegative);
+      notifyListeners();
+      return;
+    }
+
+    String newDisplay;
+    if (_state.display.startsWith('-')) {
+      newDisplay = _state.display.substring(1);
+      if (newDisplay.isEmpty) newDisplay = '0';
+    } else {
+      newDisplay = '-' + _state.display;
+    }
+
+    _state = _state.copyWith(display: newDisplay, isNewNumber: false);
     notifyListeners();
   }
 

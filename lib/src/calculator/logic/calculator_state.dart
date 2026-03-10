@@ -7,6 +7,7 @@ class CalculatorState {
   final bool isNewNumber;
   final double? bhaskaraA;
   final double? bhaskaraB;
+  final bool pendingNegative;
 
   CalculatorState({
     required this.display,
@@ -15,6 +16,7 @@ class CalculatorState {
     this.isNewNumber = true,
     this.bhaskaraA,
     this.bhaskaraB,
+    this.pendingNegative = false,
   });
 
   bool get isBhaskaraMode => pendingOperation?.symbol == 'Δ';
@@ -26,6 +28,7 @@ class CalculatorState {
     bool? isNewNumber,
     double? bhaskaraA,
     double? bhaskaraB,
+    bool? pendingNegative,
     bool clearBhaskara = false,
     bool clearOperation = false,
     bool clearAccumulator = false,
@@ -39,6 +42,7 @@ class CalculatorState {
       isNewNumber: isNewNumber ?? this.isNewNumber,
       bhaskaraA: clearBhaskara ? null : (bhaskaraA ?? this.bhaskaraA),
       bhaskaraB: clearBhaskara ? null : (bhaskaraB ?? this.bhaskaraB),
+      pendingNegative: pendingNegative ?? this.pendingNegative,
     );
   }
 

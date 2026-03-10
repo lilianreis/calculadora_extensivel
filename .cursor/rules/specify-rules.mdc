@@ -4,6 +4,7 @@ Auto-generated from all feature plans. Last updated: 2026-02-20
 
 ## Active Technologies
 - Dart with Flutter ^3.11.0 + provider ^6.1.2, cupertino_icons (002-calc-bhaskara)
+- Dart 3.11 / Flutter + Flutter, Provider (003-negative-numbers)
 
 - Dart 3.11+ (per pubspec.yaml) + Flutter SDK, `provider` or `bloc` for state management, `get_it` for dependency injection/registration (NEEDS CLARIFICATION) (001-extensible-calculator)
 
@@ -23,10 +24,10 @@ tests/
 Dart 3.11+ (per pubspec.yaml): Follow standard conventions
 
 ## Recent Changes
+- 003-negative-numbers: Added Dart 3.11 / Flutter + Flutter, Provider
 - 002-calc-bhaskara: Added Dart with Flutter ^3.11.0 + provider ^6.1.2, cupertino_icons
 - 001-extensible-calculator: Added Dart 3.11+ (per pubspec.yaml) + Flutter SDK, `provider` or `bloc` for state management, `get_it` for dependency injection/registration (NEEDS CLARIFICATION)
 
-- 001-extensible-calculator: Added Dart 3.11+ (per pubspec.yaml) + Flutter SDK, `provider` or `bloc` for state management, `get_it` for dependency injection/registration (NEEDS CLARIFICATION)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
